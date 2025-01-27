@@ -1,0 +1,85 @@
+from scipy.linalg import eig
+import numpy as np
+from scipy.optimize import fsolve, newton_krylov
+import IonsCoupledEquations as ice
+
+ryd_pos = np.zeros(100)
+
+omega_ell = 150
+omega_ryd = 198.5
+
+
+def Hessian_linear_trap(N, ryd_pos):
+    u = ice.EquilibriumPositions_linear_trap(N)
+    A = []
+    n = m = N = len(u)
+    for i in range(n): #linhas
+        inside = []
+        for j in range(m): #colunas
+            sum_value = 0
+            if i != j:
+                final_value = -2/(abs(u[j]-u[i])**3)
+
+            else:  # i = j
+                for p in range(N):
+                    if p != i:
+                        sum_value += 1 / (abs(u[i] - u[p]) ** 3)
+                final_value = 1 + 2 * sum_value
+
+            inside.append(final_value)
+        A.append(inside)
+    return A
+
+
+def Fluctuation_Linear_Trap(N, ryd_pos):
+    if ryd_pos == 0:
+        ryd_pos = np.array(N)
+    autovalores, autovetores = eig(Hessian_linear_trap(N, ryd_pos))
+
+    np.set_printoptions(precision=4, suppress=True)
+
+    return autovetores.T, autovalores
+
+#####################################################################
+########################### QUATRIC STATIC ############################
+#####################################################################
+
+def Hessian_quartic_trap(N, k_4, ryd_pos):
+
+    u = ice.EquilibriumPositions_quartic_trap(N, k_4)
+    A = []
+    n = m = N = len(u)
+    for i in range(n): #linhas
+        inside = []
+        for j in range(m): #colunas
+            sum_value = 0
+            if i != j:
+                final_value = 1/(abs(u[j]-u[i])**3)
+
+            else:  # i = j
+                for p in range(N):
+                    if p != i:
+                        sum_value += (1 / (abs(u[i] - u[p]) ** 3))
+                if j in ryd_pos:
+                    final_value = omega_ryd**2 + 1/2 - sum_value - (3/2) * k_4*u[i]**2
+
+                else:
+                    final_value = omega_ell**2 + 1/2 - sum_value - (3/2) * k_4*u[i]**2
+
+            inside.append(final_value)
+
+        A.append(inside)
+    return A
+
+
+
+def Fluctuation_quatric_trap(N, k_4, ryd_pos):
+    if ryd_pos == 0:
+        ryd_pos = np.array(N)
+    autovalores, autovetores = eig(Hessian_quartic_trap(N, k_4, ryd_pos))
+
+    np.set_printoptions(precision=4, suppress=True)
+
+    return autovetores.T, autovalores
+
+
