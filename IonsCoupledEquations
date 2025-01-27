@@ -1,0 +1,55 @@
+from scipy.optimize import fsolve, newton_krylov
+import numpy as np
+
+
+
+def Linear_trap(u):
+    f = []
+    N = len(u)
+
+    for m in range(N):
+        k1 = sum(1/((u[m] - u[n])**2)for n in range(0,m))
+
+        k2 = sum(1/((u[m] - u[n])**2)for n in range(m+1,N))
+
+        res = u[m] - k1 + k2
+
+        f.append(res)
+    return f
+
+def EquilibriumPositions_linear_trap(N):
+    d = 0.1
+    u_inicial = [-0.5*(N-1)*d + i*d for i in range(N)]
+
+    positions = newton_krylov(Linear_trap, u_inicial)
+
+    #print(positions)
+    return positions
+
+
+def Quartic_Trap(u, k_4):
+    f = []
+    N = len(u)
+    for m in range(N):
+        k1 = sum(1/((u[m] - u[n])**2)for n in range(0,m))
+
+        k2 = sum(1/((u[m] - u[n])**2)for n in range(m+1,N))
+
+        res = -2*u[m] + k_4 * 2 * u[m]**3 - k1 + k2
+
+        f.append(res)
+    return f
+
+def EquilibriumPositions_quartic_trap(N, k_4):
+    d = 0.1
+    u_inicial = [-0.1*(N-1)*d + i*d for i in range(N)]
+    #print(IonCoupledEquations(u_inicial))
+    #positions = newton_krylov(IonCoupledEquations,u_inicial)
+    positions = newton_krylov(lambda u: Quartic_Trap(u, k_4),u_inicial)
+
+    #print(positions)
+    return positions
+
+
+
+#print(EquilibriumPositions_linear_trap(10))
